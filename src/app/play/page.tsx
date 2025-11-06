@@ -3355,7 +3355,7 @@ function PlayPageClient() {
         const art = artPlayerRef.current;
         const video = art.video as HTMLVideoElement;
         // ---------- 统一旋转函数 ----------
-        const applyRotation = (deg: number, switchFullscreen: boolean) => {
+        const applyRotation = (deg: number, switchFullscreen?: boolean) => {
           rotateDeg.current = deg % 360;
           const artVideo = art.template.$video;
           const rect = artVideo.getBoundingClientRect();
@@ -3965,7 +3965,7 @@ function PlayPageClient() {
             applyRotation(rotateDeg.current, true);
           }
         });
-        artPlayerRef.current.on('fullscreen', (state) => {
+        artPlayerRef.current.on('fullscreen', (state: boolean) => {
           //全屏
           if (state) {
             //全屏
@@ -3976,7 +3976,7 @@ function PlayPageClient() {
           }
           // console.info('fullscreen', state);
         });
-        artPlayerRef.current.on('fullscreenWeb', (state) => {
+        artPlayerRef.current.on('fullscreenWeb', (state: any) => {
           //全屏
           if (state) {
             //全屏
