@@ -2614,6 +2614,9 @@ function PlayPageClient() {
 
   const rotateDeg = useRef(0); // 当前旋转角度
   const originalSize = useRef({ w: 0, h: 0 }); // 容器原始尺寸
+  const fullscreened = useRef(false); // 是否全屏
+  const fullscreenwebed = useRef(false); // 是否全屏
+  // const screenwebed = useRef(false); // 是否全屏
 
   useEffect(() => {
     // 异步初始化播放器，避免SSR问题
@@ -3076,7 +3079,8 @@ function PlayPageClient() {
               html: '<i class="art-icon flex"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"><path d="M19.841 3.24A10.987 10.987 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z"/><path d="M11 5.007h2v8h-2zM11 14.007h2v2h-2z"/></svg></i>',
               tooltip: '默认角度',
               click: function () {
-                this.video.style.transform = 'rotate(0deg)';
+                // this.video.style.transform = 'rotate(0deg)';
+                applyRotation(0);
               },
             },
             {
@@ -3351,8 +3355,11 @@ function PlayPageClient() {
         const art = artPlayerRef.current;
         const video = art.video as HTMLVideoElement;
         // ---------- 统一旋转函数 ----------
-        const applyRotation = (deg: number) => {
+        const applyRotation = (deg: number, switchFullscreen: boolean) => {
           rotateDeg.current = deg % 360;
+          const artVideo = art.template.$video;
+          const rect = artVideo.getBoundingClientRect();
+          originalSize.current = { w: rect.width, h: rect.height };
 
           // 1. 视频本身旋转 + 保持画面完整
           video.style.transition = 'transform 0.3s ease';
@@ -3361,21 +3368,34 @@ function PlayPageClient() {
 
           // 2. 容器自适应（关键！）
           if (Math.abs(deg) === 90 || Math.abs(deg) === 270) {
-            // 宽高互换
-            video.style.width = `${originalSize.current.h}px`;
-            video.style.height = `${originalSize.current.w}px`;
-            video.style.top = `${
-              -(originalSize.current.w - originalSize.current.h) / 2
-            }px`;
-            video.style.left = `${
-              (originalSize.current.w - originalSize.current.h) / 2
-            }px`;
+            //全屏,只有全屏后，在切换后的第一次有旋转的不变
+            if (switchFullscreen) {
+              //不宽高互换
+              video.style.width = `${originalSize.current.w}px`;
+              video.style.height = `${originalSize.current.h}px`;
+              video.style.left = `${
+                -(originalSize.current.w - originalSize.current.h) / 2
+              }px`;
+              video.style.top = `${
+                (originalSize.current.w - originalSize.current.h) / 2
+              }px`;
+            } else {
+              // 宽高互换
+              video.style.width = `${originalSize.current.h}px`;
+              video.style.height = `${originalSize.current.w}px`;
+              video.style.top = `${
+                -(originalSize.current.w - originalSize.current.h) / 2
+              }px`;
+              video.style.left = `${
+                (originalSize.current.w - originalSize.current.h) / 2
+              }px`;
+            }
           } else {
             // 恢复原始宽高
-            video.style.width = `${originalSize.current.w}px`;
-            video.style.height = `${originalSize.current.h}px`;
-            video.style.top = `0px`;
-            video.style.left = `0px`;
+            video.style.width = ``;
+            video.style.height = ``;
+            video.style.top = ``;
+            video.style.left = ``;
           }
         };
 
@@ -3712,8 +3732,11 @@ function PlayPageClient() {
                       );
                       setTimeout(adjustPanelPosition, 50); // 短暂延迟确保resize完成
                     }
+                    console.log('已监听ArtPlayer resize事件，实现自动适配');
+                    // const rect = video.getBoundingClientRect();
+                    // originalSize.current = { w: rect.width, h: rect.height };
+                    // applyRotation(rotateDeg.current);
                   });
-                  console.log('已监听ArtPlayer resize事件，实现自动适配');
                 }
 
                 // 额外监听屏幕方向变化事件，确保完全自动适配
@@ -3934,6 +3957,35 @@ function PlayPageClient() {
           if (artPlayerRef.current && !artPlayerRef.current.paused) {
             requestWakeLock();
           }
+        });
+        //控制旋转
+        artPlayerRef.current.on('resize', () => {
+          if (Math.abs(rotateDeg.current) > 0) {
+            console.log('旋转角度:', rotateDeg.current);
+            applyRotation(rotateDeg.current, true);
+          }
+        });
+        artPlayerRef.current.on('fullscreen', (state) => {
+          //全屏
+          if (state) {
+            //全屏
+            fullscreened.current = true;
+          } else {
+            //退出全屏
+            fullscreened.current = false;
+          }
+          // console.info('fullscreen', state);
+        });
+        artPlayerRef.current.on('fullscreenWeb', (state) => {
+          //全屏
+          if (state) {
+            //全屏
+            fullscreenwebed.current = true;
+          } else {
+            //退出全屏
+            fullscreenwebed.current = false;
+          }
+          // console.info('fullscreen', state);
         });
 
         // 监听播放状态变化，控制 Wake Lock
@@ -4205,7 +4257,6 @@ function PlayPageClient() {
             saveCurrentPlayProgress();
           }
         });
-
         if (artPlayerRef.current?.video) {
           ensureVideoSource(
             artPlayerRef.current.video as HTMLVideoElement,
