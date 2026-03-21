@@ -259,23 +259,29 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
     }
   };
 
+  const getRecentYearOptions = (count = 5) =>
+    Array.from({ length: count }, (_, i) => {
+      const y = new Date().getFullYear() - i;
+      return { label: String(y), value: String(y) };
+    });
+
   // 分类配置
   const categories: MultiLevelCategory[] = [
     ...(contentType !== 'anime-tv' && contentType !== 'anime-movie'
       ? [
-        {
-          key: 'type',
-          label: '类型',
-          options: getTypeOptions(contentType),
-        },
-      ]
+          {
+            key: 'type',
+            label: '类型',
+            options: getTypeOptions(contentType),
+          },
+        ]
       : [
-        {
-          key: 'label',
-          label: '类型',
-          options: getLabelOptions(contentType),
-        },
-      ]),
+          {
+            key: 'label',
+            label: '类型',
+            options: getLabelOptions(contentType),
+          },
+        ]),
     {
       key: 'region',
       label: '地区',
@@ -286,14 +292,8 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
       label: '年代',
       options: [
         { label: '全部', value: 'all' },
+        ...getRecentYearOptions(5),
         { label: '2020年代', value: '2020s' },
-        { label: '2025', value: '2025' },
-        { label: '2024', value: '2024' },
-        { label: '2023', value: '2023' },
-        { label: '2022', value: '2022' },
-        { label: '2021', value: '2021' },
-        { label: '2020', value: '2020' },
-        { label: '2019', value: '2019' },
         { label: '2010年代', value: '2010s' },
         { label: '2000年代', value: '2000s' },
         { label: '90年代', value: '1990s' },
@@ -305,15 +305,15 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
     },
     // 只在电视剧和综艺时显示平台选项
     ...(contentType === 'tv' ||
-      contentType === 'show' ||
-      contentType === 'anime-tv'
+    contentType === 'show' ||
+    contentType === 'anime-tv'
       ? [
-        {
-          key: 'platform',
-          label: '平台',
-          options: getPlatformOptions(contentType),
-        },
-      ]
+          {
+            key: 'platform',
+            label: '平台',
+            options: getPlatformOptions(contentType),
+          },
+        ]
       : []),
     {
       key: 'sort',
@@ -516,19 +516,21 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
           >
             <button
               onClick={() => handleCategoryClick(category.key)}
-              className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${activeCategory === category.key
+              className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+                activeCategory === category.key
                   ? isDefaultValue(category.key)
                     ? 'text-gray-900 dark:text-gray-100 cursor-default'
                     : 'text-green-600 dark:text-green-400 cursor-default'
                   : isDefaultValue(category.key)
-                    ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
-                    : 'text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer'
-                }`}
+                  ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
+                  : 'text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer'
+              }`}
             >
               <span>{getDisplayText(category.key)}</span>
               <svg
-                className={`inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${activeCategory === category.key ? 'rotate-180' : ''
-                  }`}
+                className={`inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${
+                  activeCategory === category.key ? 'rotate-180' : ''
+                }`}
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -571,10 +573,11 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
                       onClick={() =>
                         handleOptionSelect(activeCategory, option.value)
                       }
-                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-left ${isOptionSelected(activeCategory, option.value)
+                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-left ${
+                        isOptionSelected(activeCategory, option.value)
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-700'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80'
-                        }`}
+                      }`}
                     >
                       {option.label}
                     </button>
